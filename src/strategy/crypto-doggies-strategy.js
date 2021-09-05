@@ -9,10 +9,34 @@ export class CryptoDoggiesStrategy extends BaseStrategy {
 
     makeKeys(items) {
         const keys = {
-            breed: { iterable: false, path: ['breed'] },
+            breed: { path: ['breed'] },
             body: { iterable: true, path: ['composition', 'body'] },
+            body_cnt: {
+                customStatsMapper: (item) => {
+                    return [item.composition.body.length];
+                },
+                customProbsMapper: (item, stats) => {
+                    return [stats[item.composition.body.length]];
+                }
+            },
             setting: { iterable: true, path: ['composition', 'setting'] },
-            traits: { iterable: true, path: ['composition', 'traits'] }
+            setting_cnt: {
+                customStatsMapper: (item) => {
+                    return [item.composition.setting.length];
+                },
+                customProbsMapper: (item, stats) => {
+                    return [stats[item.composition.setting.length]];
+                }
+            },
+            traits: { iterable: true, path: ['composition', 'traits'] },
+            traits_cnt: {
+                customStatsMapper: (item) => {
+                    return [item.composition.traits.length];
+                },
+                customProbsMapper: (item, stats) => {
+                    return [stats[item.composition.traits.length]];
+                }
+            },
         };
         this.fillIterableTraits(items, keys);
         return keys;
