@@ -1,7 +1,11 @@
 import fs from 'fs';
 import { DateTime } from 'luxon';
+import minimist from 'minimist';
+import { CardanoTreesStrategy } from './strategy/cardano-trees-strategy.js';
 import { CryptoDoggiesStrategy } from './strategy/crypto-doggies-strategy.js';
+import { MockStrategy } from './strategy/mock-strategy.js';
 import { RankingStrategyType } from './strategy/ranking-strategy-type.js';
+import { UnsigsStrategy } from './strategy/unsigs-strategy.js';
 
 function writeToCsv(probs, pathPrepend) {
     const path = `./rankings-${pathPrepend}.csv`;
@@ -27,7 +31,7 @@ function writeToCsv(probs, pathPrepend) {
             probIndex++;
         }
         writer.write(
-            `'${(prob.id + '').padStart(4, '0')},${probIndex + 1},${prob.prob},${
+            `'${prob.id},${probIndex + 1},${prob.prob},${
                 (((probIndex + 1) / uniqueProbValues.length) * 100).toFixed(2) + '%'
             },${
                 (index < probs.length - 1 && probs[index + 1].prob === prob.prob) ||
@@ -45,8 +49,10 @@ async function main() {
     const start = DateTime.now();
     console.log('start:', start.toString());
 
-    const rankStratType = RankingStrategyType.STATISTICAL;
-    const strategy = new CryptoDoggiesStrategy();
+    const args = minimist(process.argv.slice(2));
+
+    const rankStratType = getRankingStrategyType(args);
+    const strategy = getCollectionStrategy(args);
     const items = await strategy.getItems();
 
     const keys = strategy.makeKeys(items);
@@ -63,6 +69,25 @@ async function main() {
     const end = DateTime.now();
     console.log('end:', end.toString());
     console.log('duration:', end.diff(start, ['minutes', 'seconds']).toObject());
+}
+
+function getCollectionStrategy(args) {
+    const value = args.nft || 'mock';
+    switch (value) {
+        case 'doggies':
+            return new CryptoDoggiesStrategy();
+        case 'trees':
+            return new CardanoTreesStrategy();
+        case 'unsigs':
+            return new UnsigsStrategy();
+        case 'mock':
+        default:
+            return new MockStrategy();
+    }
+}
+
+function getRankingStrategyType(args) {
+    return args.strat === 'rarity' ? RankingStrategyType.RARITY : RankingStrategyType.STATISTICAL;
 }
 
 main();

@@ -41,21 +41,12 @@ export class BaseStrategy {
         items.forEach((item) => {
             Object.keys(keys).forEach((key) => {
                 const keyConfig = keys[key];
-                if (!keyConfig.iterable) {
-                    const statsBody = stats[key] || {};
-                    stats[key] = statsBody;
-                    const value = _.get(item, keyConfig.path);
-                    if (value) {
-                        statsBody[value] = (statsBody[value] || 0) + 1;
-                    } else {
-                        statsBody[this.SALT_KEY] = (statsBody[this.SALT_KEY] || 0) + 1;
-                    }
-                } else {
+                const statsBody = stats[key] || {};
+                stats[key] = statsBody;
+                if (keyConfig.iterable) {
                     keyConfig.traits.forEach((trait) => {
-                        const statsBody = stats[key] || {};
                         const traitsBody = statsBody[trait] || {};
                         statsBody[trait] = traitsBody;
-                        stats[key] = statsBody;
                         const value = _.get(item, keyConfig.path).find((v) => v[trait]);
                         if (value) {
                             traitsBody[value[trait]] = (traitsBody[value[trait]] || 0) + 1;
@@ -63,6 +54,22 @@ export class BaseStrategy {
                             traitsBody[this.SALT_KEY] = (traitsBody[this.SALT_KEY] || 0) + 1;
                         }
                     });
+                } else if (keyConfig.customStatsMapper) {
+                    const stats = keyConfig.customStatsMapper(item);
+                    if (stats && stats.length) {
+                        stats.forEach((stat) => {
+                            statsBody[stat] = (statsBody[stat] || 0) + 1;
+                        });
+                    } else if (stats) {
+                        statsBody[this.SALT_KEY] = (statsBody[this.SALT_KEY] || 0) + 1;
+                    }
+                } else {
+                    const value = _.get(item, keyConfig.path);
+                    if (value) {
+                        statsBody[value] = (statsBody[value] || 0) + 1;
+                    } else {
+                        statsBody[this.SALT_KEY] = (statsBody[this.SALT_KEY] || 0) + 1;
+                    }
                 }
             });
         });
@@ -76,25 +83,9 @@ export class BaseStrategy {
             let prob = statStrat ? 1 : 0;
             Object.keys(keys).forEach((key) => {
                 const keyConfig = keys[key];
-                if (!keyConfig.iterable) {
-                    const statsBody = stats[key];
-                    const value = _.get(item, keyConfig.path);
-                    if (value) {
-                        if (statStrat) {
-                            prob *= statsBody[value] / items.length;
-                        } else {
-                            prob += items.length / statsBody[value];
-                        }
-                    } else {
-                        if (statStrat) {
-                            prob *= statsBody[this.SALT_KEY] / items.length;
-                        } else {
-                            prob += items.length / statsBody[this.SALT_KEY];
-                        }
-                    }
-                } else {
+                const statsBody = stats[key] || {};
+                if (keyConfig.iterable) {
                     keyConfig.traits.forEach((trait) => {
-                        const statsBody = stats[key] || {};
                         const traitsBody = statsBody[trait] || {};
                         const value = _.get(item, keyConfig.path).find((v) => v[trait]);
                         if (value) {
@@ -111,6 +102,38 @@ export class BaseStrategy {
                             }
                         }
                     });
+                } else if (keyConfig.customProbsMapper) {
+                    const probValues = keyConfig.customProbsMapper(item, statsBody);
+                    if (probValues && probValues.length) {
+                        probValues.forEach((count) => {
+                            if (statStrat) {
+                                prob *= count / items.length;
+                            } else {
+                                prob += items.length / count;
+                            }
+                        });
+                    } else if (probValues) {
+                        if (statStrat) {
+                            prob *= statsBody[this.SALT_KEY] / items.length;
+                        } else {
+                            prob += items.length / statsBody[this.SALT_KEY];
+                        }
+                    }
+                } else {
+                    const value = _.get(item, keyConfig.path);
+                    if (value) {
+                        if (statStrat) {
+                            prob *= statsBody[value] / items.length;
+                        } else {
+                            prob += items.length / statsBody[value];
+                        }
+                    } else {
+                        if (statStrat) {
+                            prob *= statsBody[this.SALT_KEY] / items.length;
+                        } else {
+                            prob += items.length / statsBody[this.SALT_KEY];
+                        }
+                    }
                 }
             });
             probs[index] = { id: this.extractId(item), prob };

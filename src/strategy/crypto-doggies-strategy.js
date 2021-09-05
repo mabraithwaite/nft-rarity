@@ -19,7 +19,7 @@ export class CryptoDoggiesStrategy extends BaseStrategy {
     }
 
     extractId(item) {
-        return item.id;
+        return (item.id + '').padStart(4, '0');
     }
 
     async getItems() {
