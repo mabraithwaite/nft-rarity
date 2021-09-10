@@ -2,7 +2,8 @@ import fs from 'fs';
 import { DateTime } from 'luxon';
 import minimist from 'minimist';
 import { CardanoTreesStrategy } from './strategy/cardano-trees-strategy.js';
-import { CryptoDoggiesStrategy } from './strategy/crypto-doggies-strategy.js';
+import { CryptoDoggiesS1Strategy } from './strategy/crypto-doggies-s1-strategy.js';
+import { CryptoDoggiesS2Strategy } from './strategy/crypto-doggies-s2-strategy.js';
 import { MockStrategy } from './strategy/mock-strategy.js';
 import { RankingStrategyType } from './strategy/ranking-strategy-type.js';
 import { UnsigsStrategy } from './strategy/unsigs-strategy.js';
@@ -74,8 +75,10 @@ async function main() {
 function getCollectionStrategy(args) {
     const value = args.nft || 'mock';
     switch (value) {
-        case 'doggies':
-            return new CryptoDoggiesStrategy();
+        case 'doggies-s1':
+            return new CryptoDoggiesS1Strategy();
+        case 'doggies-s2':
+            return new CryptoDoggiesS2Strategy();
         case 'trees':
             return new CardanoTreesStrategy();
         case 'unsigs':
