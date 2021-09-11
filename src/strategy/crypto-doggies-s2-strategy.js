@@ -10,8 +10,6 @@ export class CryptoDoggiesS2Strategy extends BaseStrategy {
     makeKeys(items) {
         const keys = {
             breed: { path: ['composition', 'breed'] },
-            luck: { path: ['composition', 'luck'] },
-            rarity: { path: ['composition', 'rarity'] },
             body: { iterable: true, path: ['composition', 'body'] },
             body_cnt: {
                 customStatsMapper: (item) => {
