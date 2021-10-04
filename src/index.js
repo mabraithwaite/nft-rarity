@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import minimist from 'minimist';
 import { BlockfrostItemQueryStrategy } from './item-query-strategy/blockfrost-item-query-strategy.js';
+import { BabyAliensStrategy } from './strategy/baby-aliens-strategy.js';
 import { CardanoTreesStrategy } from './strategy/cardano-trees-strategy.js';
 import { ClayNationStrategy } from './strategy/clay-nation-strategy.js';
 import { CryptoDoggiesS1Strategy } from './strategy/crypto-doggies-s1-strategy.js';
@@ -88,6 +89,7 @@ const strategyList = _.keyBy(
         new ClayNationStrategy(),
         new SpaceBudzStrategy(),
         new YummiStrategy(),
+        new BabyAliensStrategy(),
         new MockStrategy()
     ],
     (strat) => strat.getName()
@@ -97,9 +99,8 @@ function getCollectionStrategy(args) {
     return (args.nft && strategyList[args.nft]) || strategyList['mock'];
 }
 
-const itemQueryStrategyList = _.keyBy(
-    [new BlockfrostItemQueryStrategy()],
-    (strat) => strat.getName()
+const itemQueryStrategyList = _.keyBy([new BlockfrostItemQueryStrategy()], (strat) =>
+    strat.getName()
 );
 
 function getItemQueryStrategy(args) {
