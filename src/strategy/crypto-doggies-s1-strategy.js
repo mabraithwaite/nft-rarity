@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BaseStrategy } from './base-strategy.js';
 
@@ -36,7 +35,7 @@ export class CryptoDoggiesS1Strategy extends BaseStrategy {
                 customProbsMapper: (item, stats) => {
                     return [stats[item.composition.traits.length]];
                 }
-            },
+            }
         };
         this.fillIterableTraits(items, keys);
         return keys;
@@ -46,16 +45,11 @@ export class CryptoDoggiesS1Strategy extends BaseStrategy {
         return (item.id + '').padStart(4, '0');
     }
 
-    async getItems() {
-        // const jsonStr = fs.readFileSync('./cache/crypto-doggies.json', 'utf-8');
-        // return JSON.parse(jsonStr);
-        const jsonStr = fs.readFileSync('./cache/season1_cryptodoggies.json', 'utf-8');
-        return Object.values(
-            JSON.parse(jsonStr)['721']['7724da6519bbdda506e4d8acce11e01e01019726ddf017418f9c958a']
-        );
-    }
-
     getName() {
         return 'doggies-s1';
+    }
+
+    getPolicyId() {
+        return '7724da6519bbdda506e4d8acce11e01e01019726ddf017418f9c958a';
     }
 }

@@ -1,5 +1,3 @@
-import csv from 'csv-parser';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BaseStrategy } from './base-strategy.js';
 
@@ -27,19 +25,11 @@ export class CardanoTreesStrategy extends BaseStrategy {
         return item.AssetName;
     }
 
-    async getItems() {
-        return await new Promise((resolve, reject) => {
-            let items = [];
-            fs.createReadStream('./cache/cardano-trees.csv')
-                .pipe(csv())
-                .on('data', (data) => items.push(data))
-                .on('end', () => {
-                    resolve(items);
-                });
-        });
-    }
-
     getName() {
         return 'trees';
+    }
+
+    getPolicyId() {
+        return 'e09e4f4217669b7f735b7a3724e835d8d6344db128eb03d6ea72885e';
     }
 }

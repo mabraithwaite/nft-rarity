@@ -1,3 +1,4 @@
+import fs from 'fs';
 import _ from 'lodash';
 import { RankingStrategyType } from './ranking-strategy-type.js';
 
@@ -150,11 +151,24 @@ export class BaseStrategy {
         throw new Error('extractId() has not been implemented.');
     }
 
-    async getItems() {
-        throw new Error('getItems() has not been implemented.');
+    async getItems(itemQueryStrategy) {
+        const cacheFileName = `./cache/${this.getName()}-cache.json`;
+        let items;
+        if (!fs.existsSync(cacheFileName)) {
+            console.log(`${cacheFileName} file not found, caching items...`);
+            items = await itemQueryStrategy.getItems(this.getPolicyId());
+            fs.writeFileSync(cacheFileName, JSON.stringify(items), 'utf-8');
+        } else {
+            items = JSON.parse(fs.readFileSync(cacheFileName, 'utf-8'));
+        }
+        return items;
     }
 
     getName() {
         throw new Error('getName() has not been implemented.');
+    }
+
+    getPolicyId() {
+        throw new Error('getPolicyId() has not been implemented.');
     }
 }

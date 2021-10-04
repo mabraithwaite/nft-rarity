@@ -1,12 +1,17 @@
 import fs from 'fs';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 import minimist from 'minimist';
+import { BlockfrostItemQueryStrategy } from './item-query-strategy/blockfrost-item-query-strategy.js';
 import { CardanoTreesStrategy } from './strategy/cardano-trees-strategy.js';
+import { ClayNationStrategy } from './strategy/clay-nation-strategy.js';
 import { CryptoDoggiesS1Strategy } from './strategy/crypto-doggies-s1-strategy.js';
 import { CryptoDoggiesS2Strategy } from './strategy/crypto-doggies-s2-strategy.js';
 import { MockStrategy } from './strategy/mock-strategy.js';
 import { RankingStrategyType } from './strategy/ranking-strategy-type.js';
+import { SpaceBudzStrategy } from './strategy/space-budz-strategy.js';
 import { UnsigsStrategy } from './strategy/unsigs-strategy.js';
+import { YummiStrategy } from './strategy/yummi-strategy.js';
 
 function writeToCsv(probs, pathPrepend) {
     const path = `./rankings-${pathPrepend}.csv`;
@@ -52,45 +57,64 @@ async function main() {
 
     const args = minimist(process.argv.slice(2));
 
-    const rankStratType = getRankingStrategyType(args);
+    const rankStratTypes = getRankingStrategyType(args);
+    console.log('Using rank strategy types:', rankStratTypes);
     const strategy = getCollectionStrategy(args);
-    const items = await strategy.getItems();
+    console.log('Using collection strategy:', strategy.getName());
+    const itemQueryStrategy = getItemQueryStrategy(args);
+    console.log('Using item query strategy:', itemQueryStrategy.getName());
+    const items = await strategy.getItems(itemQueryStrategy);
+    console.log('Item count from strategy:', items.length);
 
     const keys = strategy.makeKeys(items);
     const stats = strategy.getStatsForKeys(items, keys);
-    const probs = strategy.getItemScoreFromStats(items, keys, stats, rankStratType);
 
-    writeToCsv(
-        probs,
-        `${strategy.getName()}-${
-            rankStratType === RankingStrategyType.STATISTICAL ? 'stat' : 'rarity'
-        }`
-    );
+    for (const rankStratType of rankStratTypes) {
+        const probs = strategy.getItemScoreFromStats(items, keys, stats, rankStratType);
+        writeToCsv(probs, `${strategy.getName()}-${rankStratType}`);
+    }
 
     const end = DateTime.now();
     console.log('end:', end.toString());
     console.log('duration:', end.diff(start, ['minutes', 'seconds']).toObject());
 }
 
+const strategyList = _.keyBy(
+    [
+        new CryptoDoggiesS1Strategy(),
+        new CryptoDoggiesS2Strategy(),
+        new CardanoTreesStrategy(),
+        new UnsigsStrategy(),
+        new ClayNationStrategy(),
+        new SpaceBudzStrategy(),
+        new YummiStrategy(),
+        new MockStrategy()
+    ],
+    (strat) => strat.getName()
+);
+
 function getCollectionStrategy(args) {
-    const value = args.nft || 'mock';
-    switch (value) {
-        case 'doggies-s1':
-            return new CryptoDoggiesS1Strategy();
-        case 'doggies-s2':
-            return new CryptoDoggiesS2Strategy();
-        case 'trees':
-            return new CardanoTreesStrategy();
-        case 'unsigs':
-            return new UnsigsStrategy();
-        case 'mock':
-        default:
-            return new MockStrategy();
-    }
+    return (args.nft && strategyList[args.nft]) || strategyList['mock'];
+}
+
+const itemQueryStrategyList = _.keyBy(
+    [new BlockfrostItemQueryStrategy()],
+    (strat) => strat.getName()
+);
+
+function getItemQueryStrategy(args) {
+    return (
+        (args.queryStrat && itemQueryStrategyList[args.queryStrat]) ||
+        itemQueryStrategyList['blockfrost']
+    );
 }
 
 function getRankingStrategyType(args) {
-    return args.strat === 'rarity' ? RankingStrategyType.RARITY : RankingStrategyType.STATISTICAL;
+    const strat = (args.strat || 'all').toLowerCase().trim();
+    const strats = Object.values(RankingStrategyType);
+    if (strat === 'all') return strats;
+    if (!strats.includes(strat)) throw new Error(`Strategy "${strat}" doesn't exist`);
+    return [strat];
 }
 
 main();

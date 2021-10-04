@@ -1,4 +1,3 @@
-import csv from 'csv-parser';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BaseStrategy } from './base-strategy.js';
@@ -24,15 +23,11 @@ export class MockStrategy extends BaseStrategy {
     }
 
     async getItems() {
-        return await new Promise((resolve, reject) => {
-            let items = [];
-            fs.createReadStream('./cache/mock.csv')
-                .pipe(csv())
-                .on('data', (data) => items.push(data))
-                .on('end', () => {
-                    resolve(items);
-                });
-        });
+        const cacheFileName = './cache/mock-cache.json';
+        if (!fs.existsSync(cacheFileName)) {
+            throw new Error('./cache/mock-cache.json file not found');
+        }
+        return Object.values(JSON.parse(fs.readFileSync(cacheFileName, 'utf-8')));
     }
 
     getName() {

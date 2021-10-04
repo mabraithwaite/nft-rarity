@@ -1,4 +1,4 @@
 export const RankingStrategyType = {
-    RARITY: 'RARITY',
-    STATISTICAL: 'STATISTICAL'
+    RARITY: 'rarity',
+    STATISTICAL: 'stat'
 };

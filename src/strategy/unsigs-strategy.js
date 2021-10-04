@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BaseStrategy } from './base-strategy.js';
 
@@ -50,12 +49,12 @@ export class UnsigsStrategy extends BaseStrategy {
         return (item.index + '').padStart(5, '0');
     }
 
-    async getItems() {
-        return Object.values(JSON.parse(fs.readFileSync('./cache/unsigs.json', 'utf-8')));
-    }
-
     getName() {
         return 'unsigs';
+    }
+
+    getPolicyId() {
+        return '0e14267a8020229adc0184dd25fa3174c3f7d6caadcb4425c70e7c04';
     }
 }
 
