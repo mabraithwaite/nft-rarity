@@ -8,17 +8,18 @@ export class UnsigsStrategy extends BaseStrategy {
 
     makeKeys(items) {
         const keys = {
-            num_props: { path: ['num_props'] },
+            num_props: { path: ['unsigs', 'num_props'] },
             properties: {
                 customStatsMapper: (item) => {
                     const stats = [];
-                    for (let i = 0; i < item.num_props; ++i) {
+                    if(!item.unsigs) return null;
+                    for (let i = 0; i < item.unsigs.num_props; ++i) {
                         stats.push(
                             buildKey(
-                                item.properties.multipliers[i],
-                                item.properties.colors[i],
-                                item.properties.distributions[i],
-                                item.properties.rotations[i]
+                                item.unsigs.properties.multipliers[i],
+                                item.unsigs.properties.colors[i],
+                                item.unsigs.properties.distributions[i],
+                                item.unsigs.properties.rotations[i]
                             )
                         );
                     }
@@ -26,14 +27,15 @@ export class UnsigsStrategy extends BaseStrategy {
                 },
                 customProbsMapper: (item, stats) => {
                     const counts = [];
-                    for (let i = 0; i < item.num_props; ++i) {
+                    if(!item.unsigs) return null;
+                    for (let i = 0; i < item.unsigs.num_props; ++i) {
                         counts.push(
                             stats[
                                 buildKey(
-                                    item.properties.multipliers[i],
-                                    item.properties.colors[i],
-                                    item.properties.distributions[i],
-                                    item.properties.rotations[i]
+                                    item.unsigs.properties.multipliers[i],
+                                    item.unsigs.properties.colors[i],
+                                    item.unsigs.properties.distributions[i],
+                                    item.unsigs.properties.rotations[i]
                                 )
                             ]
                         );
@@ -46,7 +48,7 @@ export class UnsigsStrategy extends BaseStrategy {
     }
 
     extractId(item) {
-        return (item.index + '').padStart(5, '0');
+        return item.title.replace('unsig_', '');
     }
 
     getName() {
